@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>研究项目工作台</title>
+<style>
+:root{
+  --bg:#f4f6f8;
+  --panel:#ffffff;
+  --panel-2:#f8fafb;
+  --text:#16202a;
+  --muted:#65717d;
+  --line:#dce3e9;
+  --nav:#142334;
+  --nav-2:#22384d;
+  --accent:#245e93;
+  --accent-2:#2b7a65;
+  --warn:#b27620;
+  --danger:#a7464c;
+  --soft-blue:#edf4fa;
+  --soft-green:#edf8f4;
+  --soft-yellow:#fff7e9;
+  --soft-red:#faeeee;
+  --shadow:0 14px 36px rgba(20,38,56,.08);
+  --radius:18px;
+  --font-size:18px;
+}
+*{box-sizing:border-box}
+html{font-size:var(--font-size)}
+body{
+  margin:0;
+  font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  line-height:1.55;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.sidebar{
+  background:linear-gradient(180deg,var(--nav),#0f1b29);
+  color:#fff;
+  padding:26px 20px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+}
+.brand{font-size:1.45rem;font-weight:850;letter-spacing:.01em}
+.brand-sub{font-size:.78rem;color:#b9c7d4;margin:.35rem 0 1.35rem}
+.project-switcher{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:18px;
+}
+.project-switcher label{display:block;font-size:.72rem;color:#aebdca;margin-bottom:6px}
+.project-switcher select{
+  width:100%;border:1px solid #456079;background:#20364c;color:white;border-radius:10px;padding:10px;
+}
+.nav{display:grid;gap:4px}
+.nav button{
+  border:0;background:transparent;color:#c7d3de;text-align:left;padding:12px 13px;border-radius:10px;
+}
+.nav button:hover,.nav button.active{background:var(--nav-2);color:white}
+.sidebar-actions{border-top:1px solid rgba(255,255,255,.12);margin-top:20px;padding-top:15px;display:grid;gap:8px}
+.sidebar-actions button{
+  border:1px solid #405a72;background:#1a3044;color:white;padding:10px;border-radius:10px;
+}
+.main{padding:28px;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
+.page-title{font-size:1.75rem;font-weight:850;margin:0}
+.page-subtitle{font-size:.83rem;color:var(--muted);margin-top:4px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 14px;border-radius:10px;
+}
+.btn:hover{border-color:#aab7c3}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:white}
+.btn.success{background:var(--accent-2);border-color:var(--accent-2);color:white}
+.btn.danger{color:var(--danger)}
+.btn.small{padding:5px 9px;font-size:.75rem}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px;
+}
+.card h2{font-size:1.06rem;margin:0 0 13px}
+.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.section-head h2{margin:0}
+.metric .label{font-size:.72rem;color:var(--muted)}
+.metric .value{font-size:1.75rem;font-weight:850;margin:.18rem 0}
+.metric .hint{font-size:.72rem;color:var(--muted)}
+.progress{height:10px;background:#e8edf2;border-radius:999px;overflow:hidden}
+.progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0}
+.hero{
+  background:linear-gradient(135deg,#193d61,#245e93 55%,#2b7a65);
+  color:white;border-radius:22px;padding:26px;box-shadow:var(--shadow);
+}
+.hero .eyebrow{font-size:.72rem;color:#d5e5f2;text-transform:uppercase;letter-spacing:.08em}
+.hero h2{font-size:1.55rem;margin:.35rem 0}
+.hero p{margin:.25rem 0;color:#e7f0f6}
+.hero-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:var(--soft-blue);font-size:.7rem}
+.hero .pill{background:rgba(255,255,255,.14);color:white}
+.badge-high{background:var(--soft-red);color:var(--danger)}
+.badge-mid{background:var(--soft-yellow);color:var(--warn)}
+.badge-low{background:var(--soft-green);color:var(--accent-2)}
+.notice{padding:14px 16px;border-radius:12px;border-left:5px solid var(--accent);background:var(--soft-blue);font-size:.82rem}
+.notice.warn{border-left-color:var(--warn);background:var(--soft-yellow)}
+.notice.good{border-left-color:var(--accent-2);background:var(--soft-green)}
+.notice.danger{border-left-color:var(--danger);background:var(--soft-red)}
+.muted{color:var(--muted);font-size:.78rem}
+.empty{padding:32px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:13px}
+.list{display:grid;gap:11px}
+.item{
+  background:white;border:1px solid var(--line);border-radius:14px;padding:15px;
+}
+.item-head{display:flex;align-items:flex-start;gap:11px}
+.item-main{flex:1;min-width:0}
+.item-title{font-weight:780}
+.item-meta{font-size:.72rem;color:var(--muted);margin-top:3px}
+.item-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.icon-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;font-size:.72rem}
+.item-body{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:none}
+.item.open .item-body{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail{
+  background:var(--panel-2);border-radius:11px;padding:12px;white-space:pre-wrap;font-size:.8rem;
+}
+.kicker{font-size:.68rem;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.task.done{opacity:.65}.task.done .item-title{text-decoration:line-through}
+.task-line{display:flex;gap:10px}
+.task-line input[type=checkbox]{width:19px;height:19px;margin-top:4px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:white}
+.filters input{min-width:250px}
+.roadmap{display:grid;gap:12px}
+.phase{
+  display:grid;grid-template-columns:120px 1fr;gap:15px;
+}
+.phase-date{font-weight:800;color:var(--accent);font-size:.82rem}
+.phase-content{border-left:4px solid var(--accent);padding:0 0 18px 15px}
+.phase-content h3{font-size:1rem;margin:0 0 5px}
+.phase-content p{font-size:.8rem;margin:4px 0}
+.result-card{border-left:5px solid var(--accent-2)}
+.result-summary{font-size:.82rem;margin-top:8px}
+.figure-card{border-left:5px solid var(--accent)}
+.literature-card{border-left:5px solid #4f6d9c}
+.lit-link{word-break:break-all;font-size:.72rem}
+.lit-high{border-left-color:var(--danger)}
+.lit-frontier{border-left-color:#6d5fa9}
+.question-card{border-left:5px solid #6d5fa9}
+.project-card{transition:.18s transform,.18s box-shadow}
+.project-card:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(20,38,56,.12)}
+.project-card.archived{opacity:.62}
+.project-card h3{font-size:1.02rem;margin:0}
+.project-objective{font-size:.8rem;color:#354350;margin:8px 0}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:850px;background:white}
+th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:10px;font-size:.76rem}
+th{background:#eef3f7}
+.notes{display:grid;gap:7px;margin-top:8px}
+.note{background:white;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:.75rem}
+.note time{display:block;color:var(--muted);font-size:.66rem}
+.add-note{display:flex;gap:7px;margin-top:8px}
+.add-note input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px}
+.modal{
+  position:fixed;inset:0;background:rgba(11,23,34,.58);display:none;align-items:center;justify-content:center;
+  z-index:30;padding:18px;
+}
+.modal.show{display:flex}
+.modal-panel{
+  background:white;border-radius:18px;width:min(840px,100%);max-height:92vh;overflow:auto;padding:22px;
+}
+.modal-panel h2{margin:0 0 14px;font-size:1.25rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:grid;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:.72rem;color:var(--muted)}
+.form-group input,.form-group select,.form-group textarea{
+  border:1px solid var(--line);border-radius:9px;padding:10px;background:white;
+}
+.form-group textarea{min-height:110px;resize:vertical}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+.tag-input{font-size:.72rem}
+
+.save-status{display:inline-flex;align-items:center;gap:7px;font-weight:700;color:var(--accent-2)}
+.save-dot{width:9px;height:9px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 4px rgba(43,122,101,.12)}
+.save-status.saving{color:var(--warn)}.save-status.saving .save-dot{background:var(--warn)}
+.save-status.error{color:var(--danger)}.save-status.error .save-dot{background:var(--danger)}
+.storage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.storage-item{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:11px}
+.storage-item .name{font-size:.7rem;color:var(--muted)}
+.storage-item .state{font-size:.86rem;font-weight:800;margin-top:2px}
+.snapshot-list{display:grid;gap:8px;max-height:360px;overflow:auto}
+.snapshot-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px;background:white}
+.snapshot-row .meta{flex:1;min-width:0}.snapshot-row .title{font-weight:750;font-size:.8rem}.snapshot-row .time{font-size:.68rem;color:var(--muted)}
+.span-2{grid-column:1/-1}
+.safety-steps{counter-reset:step;display:grid;gap:9px;margin-top:10px}
+.safety-step{position:relative;padding:11px 12px 11px 46px;background:var(--panel-2);border-radius:11px;font-size:.79rem}
+.safety-step:before{counter-increment:step;content:counter(step);position:absolute;left:12px;top:11px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:white;font-weight:800;font-size:.7rem}
+
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap}
+  .main{padding:16px}.topbar{display:block}.top-actions{margin-top:12px}.grid-4,.grid-2{grid-template-columns:1fr}.phase{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Research Workbench</div>
+    <div class="brand-sub">多研究项目 · 科学问题 · 实验记录 · 图件与待办</div>
+
+    <div class="project-switcher">
+      <label>当前研究</label>
+      <select id="projectSelect"></select>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button data-page="overview" class="active">总览</button>
+      <button data-page="projects">全部研究</button>
+      <button data-page="questions">科学问题</button>
+      <button data-page="roadmap">路线图</button>
+      <button data-page="results">实验结果记录</button>
+      <button data-page="figures">图件计划</button>
+      <button data-page="literature">相关文献</button>
+      <button data-page="tasks">待办事项</button>
+      <button data-page="settings">数据管理</button>
+    </nav>
+
+    <div class="sidebar-actions">
+      <button data-action="new-project">＋ 新建研究</button>
+      <button data-action="export">导出全部数据</button>
+      <button data-action="import">导入数据</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title" id="pageTitle">研究总览</h1>
+        <div class="page-subtitle">保存状态：<span id="saveStatus" class="save-status saving"><span class="save-dot"></span><span id="saveStatusText">正在初始化</span></span></div>
+      </div>
+      <div class="top-actions" id="topActions"></div>
+    </div>
+
+    <section id="overview" class="page active">
+      <div id="projectHero"></div>
+      <div class="grid grid-4" id="metrics" style="margin-top:16px"></div>
+      <div class="grid grid-2" style="margin-top:16px">
+        <div class="card">
+          <div class="section-head"><h2>当前进度</h2><span id="progressText" class="muted"></span></div>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div id="stageProgress" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><h2>最近实验记录</h2></div>
+          <div id="recentResults" class="list"></div>
+        </div>
+      </div>
+      <div class="grid grid-2" style="margin-top:16px">
+        <div class="card">
+          <div class="section-head"><h2>下一步任务</h2></div>
+          <div id="nextTasks" class="list"></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><h2>研究提醒</h2></div>
+          <div class="notice good"><b>建议：</b>每个研究始终保留“科学问题—实验设计—图件—结论”的对应关系。</div>
+          <div class="notice warn" style="margin-top:10px"><b>记录：</b>实验结果不仅写“成功/失败”，还应记录参数、文件位置、异常、解释和下一步。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="page">
+      <div class="section-head"><h2>研究项目库</h2></div>
+      <div id="projectList" class="grid grid-3"></div>
+    </section>
+
+    <section id="questions" class="page">
+      <div class="section-head"><h2>科学问题与假设</h2></div>
+      <div id="questionList" class="list"></div>
+    </section>
+
+    <section id="roadmap" class="page">
+      <div class="section-head"><h2>研究路线图</h2></div>
+      <div id="roadmapList" class="roadmap"></div>
+    </section>
+
+    <section id="results" class="page">
+      <div class="section-head"><h2>实验结果记录</h2></div>
+      <div class="filters">
+        <input id="resultSearch" placeholder="搜索实验、参数、结论、标签">
+        <select id="resultStatusFilter">
+          <option value="">全部结论</option>
+          <option>符合预期</option><option>部分符合</option><option>不符合预期</option><option>待判断</option>
+        </select>
+      </div>
+      <div id="resultList" class="list"></div>
+    </section>
+
+    <section id="figures" class="page">
+      <div class="section-head"><h2>图件计划</h2></div>
+      <div id="figureList" class="list"></div>
+    </section>
+
+    <section id="literature" class="page">
+      <div class="section-head"><h2>相关文献</h2></div>
+      <div class="filters">
+        <input id="literatureSearch" placeholder="搜索标题、作者、关键词、核心发现或相关性">
+        <select id="literatureCategoryFilter">
+          <option value="">全部层面</option><option>Idea层面</option><option>方法层面</option><option>理论层面</option><option>材料层面</option>
+        </select>
+        <select id="literatureSimilarityFilter">
+          <option value="">全部相似度</option><option>直接相似</option><option>强相关组成</option><option>弱相关</option><option>更前沿</option><option>基础理论</option>
+        </select>
+        <select id="literatureReadFilter">
+          <option value="">全部阅读状态</option><option>待读</option><option>精读</option><option>已读</option><option>暂不读</option>
+        </select>
+      </div>
+      <div id="literatureStats" class="notice good" style="margin-bottom:12px"></div>
+      <div id="literatureList" class="list"></div>
+    </section>
+
+    <section id="tasks" class="page">
+      <div class="section-head"><h2>待办事项</h2></div>
+      <div class="filters">
+        <input id="taskSearch" placeholder="搜索任务、细节、标签">
+        <select id="taskStatusFilter">
+          <option value="">全部状态</option>
+          <option>未开始</option><option>进行中</option><option>阻塞</option><option>已完成</option>
+        </select>
+        <select id="taskPriorityFilter">
+          <option value="">全部优先级</option>
+          <option>高</option><option>中</option><option>低</option>
+        </select>
+      </div>
+      <div id="taskList" class="list"></div>
+    </section>
+
+    <section id="settings" class="page">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>保存状态</h2>
+          <div id="storageSummary" class="storage-grid"></div>
+          <div class="top-actions">
+            <button class="btn primary" data-action="save-now">立即保存</button>
+            <button class="btn" data-action="create-snapshot">创建恢复快照</button>
+            <button class="btn" data-action="persist-storage">申请持久化存储</button>
+          </div>
+          <p class="muted">日常修改会同时写入 localStorage 与 IndexedDB；每10分钟最多生成一个自动快照。</p>
+        </div>
+        <div class="card">
+          <h2>外部备份</h2>
+          <div id="backupFileStatus" class="notice warn">尚未连接外部备份文件。</div>
+          <div class="top-actions" style="margin-top:12px">
+            <button class="btn primary" data-action="connect-backup">连接本地备份文件</button>
+            <button class="btn" data-action="write-backup">立即写入备份</button>
+            <button class="btn" data-action="export">下载JSON副本</button>
+            <button class="btn" data-action="import">导入JSON</button>
+          </div>
+          <p class="muted">“连接本地备份文件”需要Chrome/Edge支持。连接后，已授权期间每次保存都会同步覆盖该JSON文件。</p>
+        </div>
+        <div class="card span-2">
+          <div class="section-head"><h2>恢复快照</h2><span id="snapshotCount" class="muted"></span></div>
+          <div id="snapshotList" class="snapshot-list"></div>
+        </div>
+        <div class="card">
+          <h2>显示设置</h2>
+          <div class="form-group">
+            <label>基础字号</label>
+            <select id="fontSizeSelect">
+              <option value="16">标准</option><option value="18">较大</option><option value="20">大</option><option value="22">特大</option>
+            </select>
+          </div>
+          <p class="muted">你的选择会自动保存。</p>
+        </div>
+        <div class="card">
+          <h2>如何最大限度避免丢失</h2>
+          <div class="safety-steps">
+            <div class="safety-step">正常使用依靠浏览器双重存储和自动快照。</div>
+            <div class="safety-step">连接一个固定JSON文件，作为浏览器之外的实时副本。</div>
+            <div class="safety-step">重要节点再下载一份带日期的JSON，放入云盘或项目目录。</div>
+          </div>
+        </div>
+        <div class="card span-2">
+          <h2>恢复初始示例</h2>
+          <p class="muted">此操作会先自动创建一个“重置前”快照，再恢复内置示例。</p>
+          <button class="btn danger" data-action="reset">恢复示例数据</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-panel">
+    <h2 id="modalTitle">编辑</h2>
+    <form id="modalForm">
+      <div id="modalFields" class="form-grid"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-action="close-modal">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY="universal_research_workbench_v1";
+const initialData={
+  settings:{fontSize:18},
+  currentProjectId:"p_demo",
+  projects:[
+    {
+      id:"p_demo",
+      title:"小论文1：盐度对微藻脂质积累的影响",
+      category:"环境生物技术",
+      status:"进行中",
+      stage:"机制验证",
+      priority:"高",
+      startDate:"2026-06-01",
+      targetDate:"2026-10-15",
+      archived:false,
+      objective:"明确不同盐度如何影响微藻生长、光合状态与脂质积累，并建立生长—应激—产物之间的机制链。",
+      background:"已有研究提示盐胁迫可能促进脂质积累，但过高盐度会抑制生长。需要区分“脂质含量提高”与“单位体积脂质产量提高”。",
+      tags:["小论文","微藻","盐胁迫","脂质"],
+      questions:[
+        {id:"q1",title:"Q1｜盐度是否存在促进脂质产量的最佳窗口？",hypothesis:"中等盐度可能提高单细胞脂质含量，同时仍保留可接受的生物量，因此总体脂质产量存在非单调最优点。",design:"设置0、10、20、30、40 g/L盐度梯度，每组3个生物学重复；同步测生物量、脂质含量和单位体积脂质产量。",criterion:"若中等盐度组的单位体积脂质产量显著高于对照且重复一致，则支持假设。",status:"进行中"},
+        {id:"q2",title:"Q2｜脂质积累是否由氧化应激驱动？",hypothesis:"盐度升高导致ROS和膜损伤增加，触发碳流向中性脂质重新分配。",design:"测ROS、MDA、抗氧化酶活性、叶绿素荧光及脂质组成，并与脂质积累做时间滞后相关。",criterion:"只有ROS变化先于脂质增加，且抗氧化响应与脂质积累呈一致趋势，才支持机制关系。",status:"未开始"},
+        {id:"q3",title:"Q3｜盐胁迫改变的是脂质总量还是脂肪酸组成？",hypothesis:"盐度不仅提高中性脂质比例，还会提高饱和或单不饱和脂肪酸比例以维持膜稳定性。",design:"对关键盐度组进行GC-MS脂肪酸组成分析。",criterion:"比较总脂质、TAG比例和主要脂肪酸组成，区分储能脂质与膜脂变化。",status:"未开始"}
+      ],
+      roadmap:[
+        {id:"r1",title:"阶段1｜预实验与培养条件校准",start:"2026-06-01",end:"2026-06-15",output:"确定接种密度、培养周期、基础培养基与盐度可耐受上限。",status:"已完成"},
+        {id:"r2",title:"阶段2｜盐度梯度主实验",start:"2026-06-16",end:"2026-07-10",output:"获得生长曲线、生物量、脂质含量和单位体积脂质产量。",status:"进行中"},
+        {id:"r3",title:"阶段3｜机制指标与重复验证",start:"2026-07-11",end:"2026-08-20",output:"ROS、MDA、Fv/Fm、抗氧化酶和关键组重复实验。",status:"未开始"},
+        {id:"r4",title:"阶段4｜脂肪酸组成与数据整合",start:"2026-08-21",end:"2026-09-15",output:"GC-MS结果、相关分析和机制模型。",status:"未开始"},
+        {id:"r5",title:"阶段5｜图件与论文写作",start:"2026-09-16",end:"2026-10-15",output:"主图、补充材料、论文初稿和修改稿。",status:"未开始"}
+      ],
+      results:[
+        {id:"e1",date:"2026-06-08",title:"盐度耐受预实验",conditions:"0、20、40、60 g/L；初始OD750=0.15；25 ℃；12 h光/12 h暗。",files:"data/pilot_salinity_0608.xlsx；images/0608/",result:"60 g/L组48 h后明显漂白；40 g/L仍可生长但速率下降。",interpretation:"正式实验上限设为40 g/L较合理，60 g/L不适合作为长期培养条件。",issue:"20 g/L组有一个重复疑似接种量偏低。",next:"正式实验增加10和30 g/L组，并统一接种前混匀流程。",conclusion:"部分符合",tags:["预实验","盐度上限"]},
+        {id:"e2",date:"2026-06-22",title:"主实验第1批：0–40 g/L生长曲线",conditions:"5个盐度组×3重复；每日同一时间测OD750和干重。",files:"data/batch1_growth.xlsx",result:"20 g/L组第5天生物量最高；40 g/L早期延滞明显。",interpretation:"可能存在中等盐度促进或适应效应，但需结合脂质数据判断总产量。",issue:"第3天光照强度短时波动约8%。",next:"完成第7天脂质提取并重复主实验。",conclusion:"待判断",tags:["主实验","生长曲线"]}
+      ],
+      figures:[
+        {id:"f1",number:"Fig. 1",title:"实验设计与研究框架",question:"研究如何从盐度梯度连接到生长、应激和脂质积累？",data:"实验分组、采样时间点、指标体系。",type:"流程图＋机制假设示意",status:"未开始",notes:"避免堆叠过多小图标；突出三个层级：生长、应激、产物。"},
+        {id:"f2",number:"Fig. 2",title:"不同盐度下的生长与生物量",question:"盐度如何影响生长动力学？",data:"OD750、干重、生长速率、终点生物量。",type:"生长曲线＋终点柱状/散点图",status:"进行中",notes:"显示全部生物学重复和误差。"},
+        {id:"f3",number:"Fig. 3",title:"脂质含量与单位体积脂质产量",question:"最佳盐度是提高含量，还是提高实际产量？",data:"脂质含量、TAG、单位体积产量。",type:"并列散点图＋二次趋势拟合",status:"未开始",notes:"核心图，必须区分含量与产量。"},
+        {id:"f4",number:"Fig. 4",title:"氧化应激与光合状态",question:"脂质积累是否伴随可解释的应激响应？",data:"ROS、MDA、SOD、CAT、Fv/Fm。",type:"热图＋关键指标散点",status:"未开始",notes:"先做标准化热图，再选少数关键指标展开。"},
+        {id:"f5",number:"Fig. 5",title:"结构方程或机制总结图",question:"生长抑制、应激和脂质积累之间是什么关系？",data:"相关分析、时间顺序和效应量。",type:"路径图/机制图",status:"未开始",notes:"只有数据支持时才画因果箭头。"}
+      ],
+      literature:[
+        {id:"l1",title:"Salt Stress Induced Lipid Accumulation in Microalgae",authors:"Example Author et al.",year:"2024",journal:"Example Journal",doi:"",link:"",category:"Idea层面",similarity:"强相关组成",system:"微藻盐胁迫",method:"培养实验＋脂质组学",keywords:["salt stress","microalgae","lipid"],keyFinding:"中等盐胁迫可能提高中性脂质积累。",relevance:"用于设计盐度梯度和区分脂质含量与体积产量。",gap:"未同时评估光合状态与氧化应激时间顺序。",priority:"中",readStatus:"待读",notes:"示例文献，可删除。"}
+      ],
+      tasks:[
+        {id:"t1",title:"完成主实验第1批第7天脂质提取",status:"进行中",priority:"高",due:"2026-06-29",details:"按统一细胞干重归一化；保留原始称量记录和空白对照。",acceptance:"三个重复均有有效提取结果，空白在允许范围内。",tags:["实验","脂质"],notes:[]},
+        {id:"t2",title:"检查第3天光照波动是否影响结果",status:"未开始",priority:"中",due:"2026-06-30",details:"核对培养箱日志，并比较各组在波动前后的生长斜率。",acceptance:"形成是否需要重做该批次的书面判断。",tags:["质量控制"],notes:[]},
+        {id:"t3",title:"重复盐度梯度主实验",status:"未开始",priority:"高",due:"2026-07-08",details:"更换随机摆放位置，统一接种混匀，记录培养箱实际光强。",acceptance:"第二批趋势与第一批主要结论一致。",tags:["重复实验"],notes:[]},
+        {id:"t4",title:"整理Fig. 2初版",status:"未开始",priority:"中",due:"2026-07-12",details:"同时展示生长曲线和终点干重；保留全部重复点。",acceptance:"图中单位、误差定义、统计方法和样本量完整。",tags:["图件"],notes:[]}
+      ]
+    }
+  ]
+};
+
+const DB_NAME="ResearchWorkbenchDB";
+const DB_VERSION=1;
+const SNAPSHOT_INTERVAL_MS=10*60*1000;
+const MAX_SNAPSHOTS=30;
+let currentPage="overview";
+let modalContext=null;
+let storageReady=false;
+let persistentGranted=false;
+let backupFileHandle=null;
+let saveChain=Promise.resolve();
+
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function normalizeDataShape(d){
+  if(!d||!Array.isArray(d.projects))return clone(initialData);
+  d.settings=d.settings||{fontSize:18};
+  d.projects.forEach(p=>{
+    p.questions=Array.isArray(p.questions)?p.questions:[];
+    p.roadmap=Array.isArray(p.roadmap)?p.roadmap:[];
+    p.results=Array.isArray(p.results)?p.results:[];
+    p.figures=Array.isArray(p.figures)?p.figures:[];
+    p.literature=Array.isArray(p.literature)?p.literature:[];
+    p.tasks=Array.isArray(p.tasks)?p.tasks:[];
+  });
+  if(!d.currentProjectId||!d.projects.some(p=>p.id===d.currentProjectId))d.currentProjectId=d.projects[0]?.id||"";
+  return d;
+}
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    return normalizeDataShape(raw?JSON.parse(raw):clone(initialData));
+  }catch(e){return normalizeDataShape(clone(initialData))}
+}
+let data=loadData();
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    if(!window.indexedDB)return reject(new Error("浏览器不支持IndexedDB"));
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains("state"))db.createObjectStore("state");
+      if(!db.objectStoreNames.contains("snapshots"))db.createObjectStore("snapshots",{keyPath:"id"});
+      if(!db.objectStoreNames.contains("handles"))db.createObjectStore("handles");
+    };
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+async function idbOp(store,mode,fn){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,mode),os=tx.objectStore(store),req=fn(os);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    tx.oncomplete=()=>db.close();tx.onerror=()=>{db.close();reject(tx.error)};
+  });
+}
+const idbGet=(store,key)=>idbOp(store,"readonly",os=>os.get(key));
+const idbPut=(store,value,key)=>idbOp(store,"readwrite",os=>key===undefined?os.put(value):os.put(value,key));
+const idbDelete=(store,key)=>idbOp(store,"readwrite",os=>os.delete(key));
+const idbGetAll=store=>idbOp(store,"readonly",os=>os.getAll());
+
+function updateSaveStatus(kind,text){
+  const el=document.getElementById("saveStatus"),txt=document.getElementById("saveStatusText");
+  if(!el||!txt)return;el.classList.remove("saving","error");if(kind)el.classList.add(kind);txt.textContent=text;
+}
+function localStorageWrite(){
+  data._meta={...(data._meta||{}),updatedAt:new Date().toISOString(),schemaVersion:3};
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+async function performSave(reason="自动保存"){
+  updateSaveStatus("saving","正在保存…");
+  try{localStorageWrite()}catch(e){updateSaveStatus("error","localStorage写入失败");throw e}
+  let idbOK=false;
+  try{await idbPut("state",clone(data),"current");storageReady=true;idbOK=true}catch(e){storageReady=false}
+  try{await writeLinkedBackup(false)}catch(e){}
+  try{await maybeAutoSnapshot()}catch(e){}
+  const t=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  updateSaveStatus(idbOK?"":"error",idbOK?`已保存 ${t} · 双重存储`:`已保存 ${t} · 仅localStorage`);
+  renderStoragePanel();
+}
+function saveData(reason="自动保存"){
+  saveChain=saveChain.then(()=>performSave(reason)).catch(e=>{console.error(e);updateSaveStatus("error","保存失败，请立即导出JSON")});
+  return saveChain;
+}
+async function createSnapshot(label="手动快照",silent=false){
+  const snap={id:String(Date.now())+"_"+Math.random().toString(36).slice(2,6),createdAt:new Date().toISOString(),label,data:clone(data)};
+  await idbPut("snapshots",snap);
+  const all=(await idbGetAll("snapshots")).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  for(const old of all.slice(MAX_SNAPSHOTS))await idbDelete("snapshots",old.id);
+  localStorage.setItem(STORAGE_KEY+"_last_snapshot",String(Date.now()));
+  if(!silent)toast("已创建恢复快照");
+  renderStoragePanel();
+}
+async function maybeAutoSnapshot(){
+  const last=Number(localStorage.getItem(STORAGE_KEY+"_last_snapshot")||0);
+  if(Date.now()-last>=SNAPSHOT_INTERVAL_MS)await createSnapshot("自动快照",true);
+}
+async function ensureHandlePermission(handle,request=false){
+  if(!handle)return false;const opt={mode:"readwrite"};
+  if((await handle.queryPermission(opt))==="granted")return true;
+  return request&&(await handle.requestPermission(opt))==="granted";
+}
+async function writeLinkedBackup(requestPermission=false){
+  if(!backupFileHandle)return false;
+  if(!(await ensureHandlePermission(backupFileHandle,requestPermission)))return false;
+  const writable=await backupFileHandle.createWritable();
+  await writable.write(JSON.stringify(data,null,2));await writable.close();
+  return true;
+}
+async function connectBackup(){
+  if(!window.showSaveFilePicker)return alert("当前浏览器不支持持续写入本地文件。请使用Chrome/Edge，或定期下载JSON备份。");
+  try{
+    backupFileHandle=await window.showSaveFilePicker({suggestedName:"research_workbench_live_backup.json",types:[{description:"JSON backup",accept:{"application/json":[".json"]}}]});
+    await idbPut("handles",backupFileHandle,"backup");
+    await writeLinkedBackup(true);toast("已连接并写入外部备份文件");renderStoragePanel();
+  }catch(e){if(e.name!=="AbortError")alert("连接备份失败："+e.message)}
+}
+async function requestPersistentStorage(){
+  if(!navigator.storage?.persist)return alert("当前浏览器不支持持久化存储申请。");
+  persistentGranted=await navigator.storage.persist();
+  toast(persistentGranted?"浏览器已授予持久化存储":"浏览器未授予；请继续使用外部JSON备份");renderStoragePanel();
+}
+async function restoreSnapshot(id){
+  const snap=(await idbGetAll("snapshots")).find(x=>x.id===id);if(!snap)return;
+  if(!confirm(`恢复快照“${snap.label}”？当前数据会先自动备份。`))return;
+  await createSnapshot("恢复前自动快照",true);data=normalizeDataShape(clone(snap.data));await saveData("恢复快照");render(false);toast("快照已恢复");
+}
+async function deleteSnapshot(id){if(confirm("删除该快照？")){await idbDelete("snapshots",id);renderStoragePanel()}}
+async function renderStoragePanel(){
+  const summary=document.getElementById("storageSummary"),list=document.getElementById("snapshotList"),count=document.getElementById("snapshotCount"),backup=document.getElementById("backupFileStatus");
+  if(!summary||!list||!count||!backup)return;
+  let persisted=false,estimate=null,snaps=[];
+  try{persisted=!!(await navigator.storage?.persisted?.());persistentGranted=persisted}catch(e){}
+  try{estimate=await navigator.storage?.estimate?.()}catch(e){}
+  try{snaps=(await idbGetAll("snapshots")).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}catch(e){}
+  const used=estimate?.usage?Math.round(estimate.usage/1024/1024*10)/10:0;
+  summary.innerHTML=`<div class="storage-item"><div class="name">localStorage</div><div class="state">正常自动保存</div></div>
+    <div class="storage-item"><div class="name">IndexedDB</div><div class="state">${storageReady?"正常双写":"不可用/待初始化"}</div></div>
+    <div class="storage-item"><div class="name">浏览器持久化</div><div class="state">${persisted?"已授予":"未授予"}</div></div>
+    <div class="storage-item"><div class="name">站点数据占用</div><div class="state">${used||"<1"} MB</div></div>`;
+  let linked="未连接";
+  if(backupFileHandle){try{linked=(await ensureHandlePermission(backupFileHandle,false))?"已连接并可自动写入":"已连接，需点击‘立即写入备份’重新授权"}catch(e){linked="句柄不可用，请重新连接"}}
+  backup.className="notice "+(linked.startsWith("已连接并可")?"good":"warn");backup.textContent=linked;
+  count.textContent=`共 ${snaps.length} 个，最多保留 ${MAX_SNAPSHOTS} 个`;
+  list.innerHTML=snaps.length?snaps.map(x=>`<div class="snapshot-row"><div class="meta"><div class="title">${esc(x.label)}</div><div class="time">${new Date(x.createdAt).toLocaleString()}</div></div><button class="icon-btn" data-action="restore-snapshot" data-id="${x.id}">恢复</button><button class="icon-btn" data-action="delete-snapshot" data-id="${x.id}">删除</button></div>`).join(""):'<div class="empty">尚无快照。点击“创建恢复快照”即可生成。</div>';
+}
+async function initPersistence(){
+  try{
+    const idbState=await idbGet("state","current");storageReady=true;
+    const localTime=data?._meta?.updatedAt||"";const idbTime=idbState?._meta?.updatedAt||"";
+    if(idbState&&idbTime>localTime){data=normalizeDataShape(idbState);render(false);toast("已从IndexedDB恢复较新的数据")}
+    backupFileHandle=await idbGet("handles","backup");
+  }catch(e){storageReady=false}
+  try{persistentGranted=!!(await navigator.storage?.persisted?.())}catch(e){}
+  await saveData("启动保存");renderStoragePanel();
+}
+function uid(prefix){return prefix+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function project(){return data.projects.find(p=>p.id===data.currentProjectId)||data.projects[0]}
+function toast(msg){
+  const d=document.createElement("div");d.textContent=msg;
+  d.style.cssText="position:fixed;right:20px;bottom:20px;background:#17212b;color:#fff;padding:10px 14px;border-radius:9px;z-index:60;font-size:14px";
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1500);
+}
+function statusBadge(s){
+  const cls=s==="已完成"||s==="符合预期"?"badge-low":s==="阻塞"||s==="不符合预期"?"badge-high":"badge-mid";
+  return `<span class="pill ${cls}">${esc(s)}</span>`;
+}
+function render(shouldSave=true){
+  document.documentElement.style.setProperty("--font-size",(data.settings?.fontSize||18)+"px");
+  renderProjectSelect();
+  renderTopbar();
+  renderOverview();
+  renderProjects();
+  renderQuestions();
+  renderRoadmap();
+  renderResults();
+  renderFigures();
+  renderLiterature();
+  renderTasks();
+  document.getElementById("fontSizeSelect").value=String(data.settings?.fontSize||18);
+  if(shouldSave)saveData();
+  renderStoragePanel();
+}
+function renderProjectSelect(){
+  const sel=document.getElementById("projectSelect");
+  sel.innerHTML=data.projects.filter(p=>!p.archived).map(p=>`<option value="${p.id}" ${p.id===data.currentProjectId?"selected":""}>${esc(p.title)}</option>`).join("");
+}
+function renderTopbar(){
+  const titles={overview:"研究总览",projects:"全部研究",questions:"科学问题",roadmap:"路线图",results:"实验结果记录",figures:"图件计划",literature:"相关文献",tasks:"待办事项",settings:"数据管理"};
+  document.getElementById("pageTitle").textContent=titles[currentPage];
+  const actions=document.getElementById("topActions");
+  const map={
+    overview:`<button class="btn" data-action="edit-project">编辑当前研究</button><button class="btn primary" data-action="new-task">＋ 新任务</button>`,
+    projects:`<button class="btn primary" data-action="new-project">＋ 新建研究</button>`,
+    questions:`<button class="btn primary" data-action="new-question">＋ 添加问题</button>`,
+    roadmap:`<button class="btn primary" data-action="new-phase">＋ 添加阶段</button>`,
+    results:`<button class="btn primary" data-action="new-result">＋ 新建记录</button>`,
+    figures:`<button class="btn primary" data-action="new-figure">＋ 添加图件</button>`,
+    literature:`<button class="btn primary" data-action="new-literature">＋ 添加文献</button>`,
+    tasks:`<button class="btn primary" data-action="new-task">＋ 添加任务</button>`,
+    settings:``
+  };
+  actions.innerHTML=map[currentPage]||"";
+}
+function renderOverview(){
+  const p=project(); if(!p)return;
+  document.getElementById("projectHero").innerHTML=`<div class="hero">
+    <div class="eyebrow">${esc(p.category||"未分类")}</div>
+    <h2>${esc(p.title)}</h2>
+    <p>${esc(p.objective||"尚未填写核心目标")}</p>
+    <div class="hero-meta">${statusBadge(p.status)}<span class="pill">阶段：${esc(p.stage||"未设置")}</span><span class="pill">优先级：${esc(p.priority||"中")}</span><span class="pill">${esc(p.startDate||"—")} → ${esc(p.targetDate||"—")}</span></div>
+  </div>`;
+  const total=p.tasks.length, done=p.tasks.filter(t=>t.status==="已完成").length, active=p.questions.filter(q=>q.status!=="已完成").length, figs=p.figures.filter(f=>f.status==="已完成").length;
+  document.getElementById("metrics").innerHTML=[
+    ["任务完成",`${done}/${total}`,"当前研究"],
+    ["科学问题",p.questions.length,`${active} 个仍在推进`],
+    ["实验记录",p.results.length,`相关文献 ${p.literature.length} 篇`],
+    ["图件完成",`${figs}/${p.figures.length}`,"主图与补充图"]
+  ].map(x=>`<div class="card metric"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="hint">${x[2]}</div></div>`).join("");
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById("progressText").textContent=pct+"%";
+  document.getElementById("progressBar").style.width=pct+"%";
+  document.getElementById("stageProgress").innerHTML=p.roadmap.map(r=>{
+    const v=r.status==="已完成"?100:r.status==="进行中"?55:0;
+    return `<div style="margin:9px 0"><div class="muted">${esc(r.title)} · ${esc(r.status)}</div><div class="progress" style="height:6px"><span style="width:${v}%"></span></div></div>`;
+  }).join("")||'<div class="empty">尚未添加路线图</div>';
+  document.getElementById("recentResults").innerHTML=p.results.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3).map(r=>`
+    <div class="item result-card"><div class="item-title">${esc(r.title)}</div><div class="item-meta">${esc(r.date)} · ${esc(r.conclusion)}</div><div class="result-summary">${esc(r.result)}</div></div>
+  `).join("")||'<div class="empty">尚无实验记录</div>';
+  const next=p.tasks.filter(t=>t.status!=="已完成").sort((a,b)=>(a.priority==="高"?0:a.priority==="中"?1:2)-(b.priority==="高"?0:b.priority==="中"?1:2)||(a.due||"9999").localeCompare(b.due||"9999")).slice(0,5);
+  document.getElementById("nextTasks").innerHTML=next.map(t=>taskCard(t,false)).join("")||'<div class="empty">当前没有未完成任务</div>';
+}
+function renderProjects(){
+  const el=document.getElementById("projectList");
+  el.innerHTML=data.projects.map(p=>{
+    const total=p.tasks.length,done=p.tasks.filter(t=>t.status==="已完成").length,pct=total?Math.round(done/total*100):0;
+    return `<div class="card project-card ${p.archived?"archived":""}">
+      <div class="section-head"><h3>${esc(p.title)}</h3>${statusBadge(p.status)}</div>
+      <div class="muted">${esc(p.category)} · ${esc(p.stage)}</div>
+      <div class="project-objective">${esc(p.objective)}</div>
+      <div class="hero-meta">${(p.tags||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join("")}</div>
+      <div style="margin-top:13px"><div class="muted">任务进度 ${done}/${total}</div><div class="progress"><span style="width:${pct}%"></span></div></div>
+      <div class="item-actions" style="margin-top:14px">
+        <button class="icon-btn" data-action="open-project" data-id="${p.id}">打开</button>
+        <button class="icon-btn" data-action="edit-project-by-id" data-id="${p.id}">编辑</button>
+        <button class="icon-btn" data-action="duplicate-project" data-id="${p.id}">复制</button>
+        <button class="icon-btn" data-action="archive-project" data-id="${p.id}">${p.archived?"取消归档":"归档"}</button>
+        <button class="icon-btn" data-action="delete-project" data-id="${p.id}">删除</button>
+      </div>
+    </div>`;
+  }).join("")||'<div class="empty">尚无研究项目</div>';
+}
+function questionCard(q){
+  return `<div class="item question-card" id="question_${q.id}">
+    <div class="item-head"><div class="item-main"><div class="item-title">${esc(q.title)}</div><div class="item-meta">${esc(q.status)}</div></div>
+    <div class="item-actions"><button class="icon-btn" data-action="toggle-item" data-target="question_${q.id}">详情</button><button class="icon-btn" data-action="edit-question" data-id="${q.id}">编辑</button><button class="icon-btn" data-action="delete-question" data-id="${q.id}">删除</button></div></div>
+    <div class="item-body"><div class="detail-grid"><div><div class="kicker">假设</div><div class="detail">${esc(q.hypothesis)}</div></div><div><div class="kicker">实验设计</div><div class="detail">${esc(q.design)}</div></div><div style="grid-column:1/-1"><div class="kicker">判据</div><div class="detail">${esc(q.criterion)}</div></div></div></div>
+  </div>`;
+}
+function renderQuestions(){const p=project();document.getElementById("questionList").innerHTML=p.questions.map(questionCard).join("")||'<div class="empty">尚未添加科学问题</div>'}
+function renderRoadmap(){
+  const p=project();
+  document.getElementById("roadmapList").innerHTML=p.roadmap.map(r=>`<div class="phase">
+    <div class="phase-date">${esc(r.start||"—")}<br>至<br>${esc(r.end||"—")}</div>
+    <div class="phase-content"><div class="section-head"><h3>${esc(r.title)}</h3>${statusBadge(r.status)}</div><p><b>阶段产出：</b>${esc(r.output)}</p>
+    <div class="item-actions" style="justify-content:flex-start"><button class="icon-btn" data-action="edit-phase" data-id="${r.id}">编辑</button><button class="icon-btn" data-action="delete-phase" data-id="${r.id}">删除</button></div></div>
+  </div>`).join("")||'<div class="empty">尚未添加路线图阶段</div>';
+}
+function resultCard(r){
+  return `<div class="item result-card" id="result_${r.id}">
+    <div class="item-head"><div class="item-main"><div class="item-title">${esc(r.title)}</div><div class="item-meta">${esc(r.date)} · ${esc(r.conclusion)} · ${(r.tags||[]).map(esc).join(" / ")}</div></div>
+    <div class="item-actions"><button class="icon-btn" data-action="toggle-item" data-target="result_${r.id}">详情</button><button class="icon-btn" data-action="edit-result" data-id="${r.id}">编辑</button><button class="icon-btn" data-action="delete-result" data-id="${r.id}">删除</button></div></div>
+    <div class="result-summary"><b>结果：</b>${esc(r.result)}</div>
+    <div class="item-body"><div class="detail-grid">
+      <div><div class="kicker">条件与参数</div><div class="detail">${esc(r.conditions)}</div></div>
+      <div><div class="kicker">文件与目录</div><div class="detail">${esc(r.files)}</div></div>
+      <div><div class="kicker">解释</div><div class="detail">${esc(r.interpretation)}</div></div>
+      <div><div class="kicker">问题与异常</div><div class="detail">${esc(r.issue)}</div></div>
+      <div style="grid-column:1/-1"><div class="kicker">下一步</div><div class="detail">${esc(r.next)}</div></div>
+    </div></div>
+  </div>`;
+}
+function renderResults(){
+  const p=project(),q=(document.getElementById("resultSearch").value||"").toLowerCase(),sf=document.getElementById("resultStatusFilter").value;
+  const arr=p.results.filter(r=>[r.title,r.conditions,r.files,r.result,r.interpretation,r.issue,r.next,(r.tags||[]).join(" ")].join(" ").toLowerCase().includes(q)&&(!sf||r.conclusion===sf)).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("resultList").innerHTML=arr.map(resultCard).join("")||'<div class="empty">没有符合条件的实验记录</div>';
+}
+function figureCard(f){
+  return `<div class="item figure-card" id="figure_${f.id}">
+    <div class="item-head"><div class="item-main"><div class="item-title">${esc(f.number)}｜${esc(f.title)}</div><div class="item-meta">${esc(f.type)} · ${esc(f.status)}</div></div>
+    <div class="item-actions"><button class="icon-btn" data-action="toggle-item" data-target="figure_${f.id}">详情</button><button class="icon-btn" data-action="edit-figure" data-id="${f.id}">编辑</button><button class="icon-btn" data-action="delete-figure" data-id="${f.id}">删除</button></div></div>
+    <div class="item-body"><div class="detail-grid">
+      <div><div class="kicker">回答的问题</div><div class="detail">${esc(f.question)}</div></div>
+      <div><div class="kicker">所需数据</div><div class="detail">${esc(f.data)}</div></div>
+      <div style="grid-column:1/-1"><div class="kicker">作图备注</div><div class="detail">${esc(f.notes)}</div></div>
+    </div></div>
+  </div>`;
+}
+function renderFigures(){const p=project();document.getElementById("figureList").innerHTML=p.figures.map(figureCard).join("")||'<div class="empty">尚未规划图件</div>'}
+function literatureCard(l){
+  const cardClass=l.similarity==="直接相似"?"lit-high":(l.similarity==="更前沿"?"lit-frontier":"");
+  const link=l.link?`<a class="lit-link" href="${esc(l.link)}" target="_blank" rel="noopener noreferrer">打开原文 / DOI</a>`:'<span class="muted">未记录链接</span>';
+  return `<div class="item literature-card ${cardClass}" id="literature_${l.id}">
+    <div class="item-head"><div class="item-main"><div class="item-title">${esc(l.title)}</div><div class="item-meta">${esc(l.authors)} · ${esc(l.year)} · ${esc(l.journal)} · ${esc(l.category)} · ${esc(l.similarity)}</div><div class="hero-meta">${(l.keywords||[]).map(k=>`<span class="pill">${esc(k)}</span>`).join("")}</div></div>
+    <div class="item-actions"><button class="icon-btn" data-action="toggle-item" data-target="literature_${l.id}">详情</button><button class="icon-btn" data-action="edit-literature" data-id="${l.id}">编辑</button><button class="icon-btn" data-action="delete-literature" data-id="${l.id}">删除</button></div></div>
+    <div class="result-summary"><b>与你研究的关系：</b>${esc(l.relevance)}</div>
+    <div class="item-body"><div class="detail-grid">
+      <div><div class="kicker">体系与方法</div><div class="detail">${esc(l.system)}
+${esc(l.method)}</div></div>
+      <div><div class="kicker">核心发现</div><div class="detail">${esc(l.keyFinding)}</div></div>
+      <div><div class="kicker">尚未覆盖的缺口</div><div class="detail">${esc(l.gap)}</div></div>
+      <div><div class="kicker">管理信息</div><div class="detail">优先级：${esc(l.priority)}
+阅读状态：${esc(l.readStatus)}
+DOI：${esc(l.doi)}</div></div>
+      <div style="grid-column:1/-1"><div class="kicker">个人备注</div><div class="detail">${esc(l.notes||"")}</div></div>
+      <div style="grid-column:1/-1">${link}</div>
+    </div></div>
+  </div>`;
+}
+function renderLiterature(){
+  const el=document.getElementById("literatureList");if(!el)return;
+  const p=project(),q=(document.getElementById("literatureSearch")?.value||"").toLowerCase(),cf=document.getElementById("literatureCategoryFilter")?.value||"",sf=document.getElementById("literatureSimilarityFilter")?.value||"",rf=document.getElementById("literatureReadFilter")?.value||"";
+  const arr=p.literature.filter(l=>[l.title,l.authors,l.journal,l.doi,l.category,l.similarity,l.system,l.method,(l.keywords||[]).join(" "),l.keyFinding,l.relevance,l.gap,l.notes].join(" ").toLowerCase().includes(q)&&(!cf||l.category===cf)&&(!sf||l.similarity===sf)&&(!rf||l.readStatus===rf));
+  const direct=p.literature.filter(l=>l.similarity==="直接相似").length,frontier=p.literature.filter(l=>l.similarity==="更前沿").length,read=p.literature.filter(l=>l.readStatus==="已读"||l.readStatus==="精读").length;
+  const stats=document.getElementById("literatureStats");if(stats)stats.innerHTML=`共 <b>${p.literature.length}</b> 篇；直接相似 <b>${direct}</b> 篇；更前沿 <b>${frontier}</b> 篇；已读/精读 <b>${read}</b> 篇。当前筛选显示 ${arr.length} 篇。`;
+  el.innerHTML=arr.map(literatureCard).join("")||'<div class="empty">没有符合条件的文献</div>';
+}
+function taskCard(t,full=true){
+  const notes=(t.notes||[]).map(n=>`<div class="note"><time>${esc(n.time)}</time>${esc(n.text)}</div>`).join("");
+  return `<div class="item task ${t.status==="已完成"?"done":""}" id="task_${t.id}">
+    <div class="task-line"><input type="checkbox" data-action="toggle-task" data-id="${t.id}" ${t.status==="已完成"?"checked":""}>
+    <div class="item-main"><div class="item-title">${esc(t.title)}</div><div class="item-meta">${esc(t.priority)}优先 · ${esc(t.status)} ${t.due?"· "+esc(t.due):""} · ${(t.tags||[]).map(esc).join(" / ")}</div></div>
+    ${full?`<div class="item-actions"><button class="icon-btn" data-action="toggle-item" data-target="task_${t.id}">详情</button><button class="icon-btn" data-action="edit-task" data-id="${t.id}">编辑</button><button class="icon-btn" data-action="delete-task" data-id="${t.id}">删除</button></div>`:""}
+    </div>
+    ${full?`<div class="item-body"><div class="detail-grid"><div><div class="kicker">实施细节</div><div class="detail">${esc(t.details)}</div></div><div><div class="kicker">完成判据</div><div class="detail">${esc(t.acceptance)}</div></div></div>
+      <div class="kicker" style="margin-top:10px">细节记录</div><div class="notes">${notes||'<div class="muted">暂无记录</div>'}</div>
+      <div class="add-note"><input id="note_${t.id}" placeholder="记录参数、命令、文件位置、结果或问题"><button class="btn small" data-action="add-note" data-id="${t.id}">添加记录</button></div>
+    </div>`:""}
+  </div>`;
+}
+function renderTasks(){
+  const p=project(),q=(document.getElementById("taskSearch").value||"").toLowerCase(),sf=document.getElementById("taskStatusFilter").value,pf=document.getElementById("taskPriorityFilter").value;
+  const arr=p.tasks.filter(t=>[t.title,t.details,t.acceptance,(t.tags||[]).join(" ")].join(" ").toLowerCase().includes(q)&&(!sf||t.status===sf)&&(!pf||t.priority===pf));
+  document.getElementById("taskList").innerHTML=arr.map(t=>taskCard(t,true)).join("")||'<div class="empty">没有符合条件的任务</div>';
+}
+function setPage(page){
+  currentPage=page;
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===page));
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  render();
+}
+function openModal(type,id=null){
+  modalContext={type,id};
+  const p=project();
+  const schemas={
+    project:{
+      title:id?"编辑研究":"新建研究",
+      fields:[
+        ["title","研究标题","text"],["category","研究领域","text"],["status","状态","select",["未开始","进行中","暂停","已完成"]],
+        ["stage","当前阶段","text"],["priority","优先级","select",["高","中","低"]],["startDate","开始日期","date"],["targetDate","目标完成日期","date"],
+        ["objective","核心目标 / 一句话科学问题","textarea","full"],["background","背景与研究价值","textarea","full"],["tags","标签（逗号分隔）","text","full"]
+      ]
+    },
+    question:{
+      title:id?"编辑科学问题":"添加科学问题",
+      fields:[["title","问题标题","text","full"],["status","状态","select",["未开始","进行中","已完成"]],["hypothesis","可证伪假设","textarea","full"],["design","实验设计 / 分析路线","textarea","full"],["criterion","支持或否定假设的判据","textarea","full"]]
+    },
+    phase:{
+      title:id?"编辑路线阶段":"添加路线阶段",
+      fields:[["title","阶段标题","text","full"],["start","开始日期","date"],["end","结束日期","date"],["status","状态","select",["未开始","进行中","已完成"]],["output","阶段产出 / 验收标准","textarea","full"]]
+    },
+    result:{
+      title:id?"编辑实验记录":"新建实验记录",
+      fields:[["date","日期","date"],["conclusion","结论状态","select",["符合预期","部分符合","不符合预期","待判断"]],["title","实验 / 分析标题","text","full"],["conditions","条件与参数","textarea","full"],["files","文件、目录与版本","textarea","full"],["result","核心结果","textarea","full"],["interpretation","解释与证据强度","textarea","full"],["issue","问题、异常与不确定性","textarea","full"],["next","下一步动作","textarea","full"],["tags","标签（逗号分隔）","text","full"]]
+    },
+    figure:{
+      title:id?"编辑图件":"添加图件",
+      fields:[["number","图号","text"],["status","状态","select",["未开始","进行中","已完成"]],["title","图题","text","full"],["question","该图回答什么问题","textarea","full"],["data","需要哪些数据","textarea","full"],["type","图形形式","text","full"],["notes","作图细节、比较和验收标准","textarea","full"]]
+    },
+    literature:{
+      title:id?"编辑文献":"添加文献",
+      fields:[["title","文献标题","text","full"],["authors","作者","text","full"],["year","年份","text"],["journal","期刊/来源","text"],["doi","DOI","text"],["link","链接","text","full"],["category","研究层面","select",["Idea层面","方法层面","理论层面","材料层面"]],["similarity","与本研究相似度","select",["直接相似","强相关组成","弱相关","更前沿","基础理论"]],["system","研究体系","text","full"],["method","方法","text","full"],["keywords","关键词（逗号分隔）","text","full"],["keyFinding","核心发现","textarea","full"],["relevance","与本研究的相关之处 / 重点内容","textarea","full"],["gap","该文献尚未覆盖的缺口","textarea","full"],["priority","阅读优先级","select",["高","中","低"]],["readStatus","阅读状态","select",["待读","精读","已读","暂不读"]],["notes","个人备注、摘录位置或后续动作","textarea","full"]]
+    },
+    task:{
+      title:id?"编辑任务":"添加任务",
+      fields:[["title","任务标题","text","full"],["status","状态","select",["未开始","进行中","阻塞","已完成"]],["priority","优先级","select",["高","中","低"]],["due","截止日期","date"],["tags","标签（逗号分隔）","text"],["details","实施细节","textarea","full"],["acceptance","完成判据","textarea","full"]]
+    }
+  };
+  const schema=schemas[type];
+  let obj={};
+  if(type==="project")obj=id?data.projects.find(x=>x.id===id):{};
+  if(type==="question")obj=id?p.questions.find(x=>x.id===id):{};
+  if(type==="phase")obj=id?p.roadmap.find(x=>x.id===id):{};
+  if(type==="result")obj=id?p.results.find(x=>x.id===id):{};
+  if(type==="figure")obj=id?p.figures.find(x=>x.id===id):{};
+  if(type==="literature")obj=id?p.literature.find(x=>x.id===id):{};
+  if(type==="task")obj=id?p.tasks.find(x=>x.id===id):{};
+  document.getElementById("modalTitle").textContent=schema.title;
+  document.getElementById("modalFields").innerHTML=schema.fields.map(([name,label,kind,arg])=>{
+    const full=arg==="full"||schema.fields.find(x=>x[0]===name)?.[3]==="full";
+    const options=Array.isArray(arg)?arg:null;
+    const value=Array.isArray(obj[name])?obj[name].join(","):obj[name]||"";
+    let input="";
+    if(kind==="textarea")input=`<textarea name="${name}">${esc(value)}</textarea>`;
+    else if(kind==="select")input=`<select name="${name}">${options.map(o=>`<option ${value===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+    else input=`<input name="${name}" type="${kind}" value="${esc(value)}">`;
+    return `<div class="form-group ${full?"full":""}"><label>${label}</label>${input}</div>`;
+  }).join("");
+  document.getElementById("modal").classList.add("show");
+}
+function closeModal(){document.getElementById("modal").classList.remove("show");modalContext=null}
+function submitModal(e){
+  e.preventDefault();const fd=new FormData(e.target),obj=Object.fromEntries(fd.entries()),p=project(),{type,id}=modalContext;
+  if("tags" in obj)obj.tags=obj.tags.split(",").map(x=>x.trim()).filter(Boolean);
+  if("keywords" in obj)obj.keywords=obj.keywords.split(",").map(x=>x.trim()).filter(Boolean);
+  if(type==="project"){
+    if(id){const i=data.projects.findIndex(x=>x.id===id);data.projects[i]={...data.projects[i],...obj}}
+    else{const np={id:uid("p"),archived:false,questions:[],roadmap:[],results:[],figures:[],literature:[],tasks:[],...obj};data.projects.push(np);data.currentProjectId=np.id}
+  }else{
+    const map={question:"questions",phase:"roadmap",result:"results",figure:"figures",literature:"literature",task:"tasks"},key=map[type];
+    if(id){const i=p[key].findIndex(x=>x.id===id);p[key][i]={...p[key][i],...obj}}
+    else{obj.id=uid(type[0]);if(type==="task")obj.notes=[];p[key].push(obj)}
+  }
+  closeModal();render();toast("已保存");
+}
+function deleteEntity(type,id){
+  if(!confirm("确认删除？"))return;
+  const p=project(),map={question:"questions",phase:"roadmap",result:"results",figure:"figures",literature:"literature",task:"tasks"};
+  p[map[type]]=p[map[type]].filter(x=>x.id!==id);render();
+}
+function duplicateProject(id){
+  const src=data.projects.find(p=>p.id===id),cp=clone(src),old=cp.id;cp.id=uid("p");cp.title=cp.title+"（副本）";cp.archived=false;
+  ["questions","roadmap","results","figures","literature","tasks"].forEach(k=>cp[k].forEach(x=>x.id=uid(k[0])));
+  data.projects.push(cp);data.currentProjectId=cp.id;render();setPage("overview");
+}
+function exportData(){
+  data._meta={...(data._meta||{}),lastExportAt:new Date().toISOString()};
+  saveData("导出备份");
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="research_workbench_"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");if(!b)return;const a=b.dataset.action,id=b.dataset.id;
+  if(a==="new-project")openModal("project");
+  if(a==="edit-project")openModal("project",data.currentProjectId);
+  if(a==="edit-project-by-id")openModal("project",id);
+  if(a==="open-project"){data.currentProjectId=id;setPage("overview")}
+  if(a==="duplicate-project")duplicateProject(id);
+  if(a==="archive-project"){const p=data.projects.find(x=>x.id===id);p.archived=!p.archived;render()}
+  if(a==="delete-project"){
+    if(data.projects.length===1)return alert("至少保留一个研究项目");
+    if(confirm("删除该研究及其全部记录？")){data.projects=data.projects.filter(x=>x.id!==id);if(data.currentProjectId===id)data.currentProjectId=data.projects[0].id;render()}
+  }
+  if(a==="new-question")openModal("question");
+  if(a==="edit-question")openModal("question",id);
+  if(a==="delete-question")deleteEntity("question",id);
+  if(a==="new-phase")openModal("phase");
+  if(a==="edit-phase")openModal("phase",id);
+  if(a==="delete-phase")deleteEntity("phase",id);
+  if(a==="new-result")openModal("result");
+  if(a==="edit-result")openModal("result",id);
+  if(a==="delete-result")deleteEntity("result",id);
+  if(a==="new-figure")openModal("figure");
+  if(a==="edit-figure")openModal("figure",id);
+  if(a==="delete-figure")deleteEntity("figure",id);
+  if(a==="new-literature")openModal("literature");
+  if(a==="edit-literature")openModal("literature",id);
+  if(a==="delete-literature")deleteEntity("literature",id);
+  if(a==="new-task")openModal("task");
+  if(a==="edit-task")openModal("task",id);
+  if(a==="delete-task")deleteEntity("task",id);
+  if(a==="toggle-item")document.getElementById(b.dataset.target)?.classList.toggle("open");
+  if(a==="toggle-task"){const t=project().tasks.find(x=>x.id===id);t.status=e.target.checked?"已完成":"未开始";render()}
+  if(a==="add-note"){const inp=document.getElementById("note_"+id),txt=inp.value.trim();if(txt){const t=project().tasks.find(x=>x.id===id);t.notes=t.notes||[];t.notes.unshift({time:new Date().toLocaleString(),text:txt});render();setTimeout(()=>document.getElementById("task_"+id)?.classList.add("open"),0)}}
+  if(a==="close-modal")closeModal();
+  if(a==="save-now"){saveData("手动保存");toast("已提交保存")}
+  if(a==="create-snapshot")createSnapshot("手动快照");
+  if(a==="persist-storage")requestPersistentStorage();
+  if(a==="connect-backup")connectBackup();
+  if(a==="write-backup")writeLinkedBackup(true).then(ok=>{toast(ok?"外部备份已写入":"未获得文件写入权限");renderStoragePanel()});
+  if(a==="restore-snapshot")restoreSnapshot(id);
+  if(a==="delete-snapshot")deleteSnapshot(id);
+  if(a==="export")exportData();
+  if(a==="import")document.getElementById("importFile").click();
+  if(a==="reset"){if(confirm("清空当前数据并恢复内置示例？")){createSnapshot("重置前自动快照",true).then(()=>{data=clone(initialData);render();setPage("overview");toast("已恢复示例，旧数据可从快照恢复")})}}
+});
+document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b)setPage(b.dataset.page)});
+document.getElementById("projectSelect").addEventListener("change",e=>{data.currentProjectId=e.target.value;render()});
+document.getElementById("modalForm").addEventListener("submit",submitModal);
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+document.getElementById("resultSearch").addEventListener("input",renderResults);
+document.getElementById("resultStatusFilter").addEventListener("change",renderResults);
+document.getElementById("literatureSearch").addEventListener("input",renderLiterature);
+document.getElementById("literatureCategoryFilter").addEventListener("change",renderLiterature);
+document.getElementById("literatureSimilarityFilter").addEventListener("change",renderLiterature);
+document.getElementById("literatureReadFilter").addEventListener("change",renderLiterature);
+document.getElementById("taskSearch").addEventListener("input",renderTasks);
+document.getElementById("taskStatusFilter").addEventListener("change",renderTasks);
+document.getElementById("taskPriorityFilter").addEventListener("change",renderTasks);
+document.getElementById("fontSizeSelect").addEventListener("change",e=>{data.settings.fontSize=Number(e.target.value);render()});
+document.getElementById("importFile").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=async()=>{try{const parsed=JSON.parse(r.result);if(!parsed.projects)throw new Error("缺少projects字段");await createSnapshot("导入前自动快照",true);data=normalizeDataShape(parsed);render();toast("导入成功") }catch(err){alert("导入失败："+err.message)}};
+  r.readAsText(file);e.target.value="";
+});
+render(false);
+initPersistence();
+setInterval(()=>saveData("定时保存"),30000);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveData("页面隐藏保存")});
+window.addEventListener("beforeunload",()=>{try{localStorageWrite()}catch(e){}});
+</script>
+</body>
+</html>
