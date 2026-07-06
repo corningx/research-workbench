@@ -45,6 +45,7 @@ Please note:
 
 ```text
 research-workbench/
-├── index.html      # Main application
-├── README.md       # Project documentation
-└── demo.json       # Example research data
+├── index.html       # 网站主程序
+├── README.md        # English documentation
+├── README_zh.md     # 中文项目说明
+└── demo.json        # 示例研究数据
